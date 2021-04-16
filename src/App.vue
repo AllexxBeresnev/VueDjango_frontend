@@ -1,16 +1,107 @@
 <template>
-  <img alt="Vue logo" src="./assets/logo.png">
-  <HelloWorld msg="Welcome to Your Vue.js App"/>
+  <div> 
+    <form @submit.prevent = "submitForm" >
+      <div class="form-group row">
+        <input type="text" class="col-3 form-control mx-2" placeholder="Name" v-model = "student.name">
+        <input type="text" class="col-3 form-control mx-2" placeholder="Course" v-model = "student.course">
+        <input type="text" class="col-3 form-control mx-2" placeholder="Rating" v-model = "student.rating">
+        <button class="btn btn-success">Submit</button>
+      </div>
+
+    </form>
+
+
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Name </th>
+          <th>Course </th>
+          <th>Rating </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for= "student in students" :key="student.id" @dblclick="$data.student = student">
+          <td>{{ student.name}}</td>
+          <td>{{ student.course}}</td>
+          <td>{{ student.rating}}</td>    
+          <td>
+            <button class="btn btn-outline-danger btn-sm mx-1" @click = "deleteStudent(student)">x</button>
+          </td>    
+        </tr>
+      </tbody>
+    </table>
+</div>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
+
 
 export default {
   name: 'App',
-  components: {
-    HelloWorld
+  data(){
+    return {
+      student: {},
+      students: []
+    }
+  },
+  async created(){
+    await this.getStudents();
+  },
+  methods: {
+    submitForm() {
+      if (this.student.id === undefined){
+        this.createStudent();
+      } else {
+        this.editStudent()
+      }
+    },
+    async getStudents(){
+      var response = await fetch('http://localhost:8000/api/students/');
+      this.students  = await response.json();
+    },
+    async createStudent(){
+      await this.getStudents();
+
+      await fetch('http://localhost:8000/api/students/', {
+        method: 'post',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(this.student)
+      });
+
+      await this.getStudents();
+
+    },
+    async editStudent() {
+       await this.getStudents();
+
+      await fetch(`http://localhost:8000/api/students/${this.student.id}/`, {
+        method: 'put',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(this.student)
+      });
+
+      await this.getStudents();
+      this.student = {};
+    },
+    async deleteStudent(student){
+      await this.getStudents();
+
+      await fetch(`http://localhost:8000/api/students/${student.id}/`, {
+        method: 'delete',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(this.student)
+      });
+
+      await this.getStudents();
+    }
   }
+
 }
 </script>
 
